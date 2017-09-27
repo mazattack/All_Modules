@@ -2,3 +2,211 @@
 title: "Module notebook"
 output: html_notebook
 ---
+```{r slider}
+library(manipulate)
+outcomes <- c(1, 2, 3, 4, 5, 6)
+manipulate(hist(sample(outcomes, n, replace = TRUE), breaks = c(0.5, 1.5, 2.5, 
+    3.5, 4.5, 5.5, 6.5), probability = TRUE, main = paste("Histogram of Outcomes of ", 
+    n, " Die Rolls", sep = ""), xlab = "roll", ylab = "probability"), n = slider(0, 
+    10000, initial = 100, step = 100))
+```
+Write a function to simulate rolling a die where you pass the number of rolls as an argument. Then, use your function to simulate rolling two dice 1000 times and take the sum of the rolls. Plot a histogram of those results.
+```{r}
+nrolls <- 1000
+roll <- function(x) {
+    sample(1:6, x, replace = TRUE)
+}
+two_dice <- roll(nrolls) + roll(nrolls)
+hist(two_dice, breaks = c(1.5:12.5), probability = TRUE, main = "Rolling Two Dice", 
+    xlab = "sum of rolls", ylab = "probability")
+```
+
+```{r}
+outcomes <- c("heads", "tails")
+prob <- c(1/2, 1/2)
+barplot(prob, ylim = c(0, 0.6), names.arg = outcomes, space = 0.1, xlab = "outcome", 
+    ylab = "Pr(X = outcome)", main = "Probability Mass Function")
+```
+
+```{r} 
+cumprob<-cumsum(prob)
+barplot(cumprob, names.arg=outcomes, space = 0.1, xlab="outcome", ylab = "Cumulative Pr(X)", main="Cumulative Probability")
+```
+I don't understand why this gives this graph. Is heads and tails meant to be round one, round two? Or only head, head or tail?
+
+
+```{r}
+outcomes <- c(1, 2, 3, 4, 5, 6)
+prob <- c(1/6, 1/6, 1/6, 1/6, 1/6, 1/6)
+barplot(prob, ylim = c(0, 0.5), names.arg = outcomes, space = 0.1, xlab = "outcome", 
+    ylab = "Pr(X = outcome)", main = "Probability Mass Function")
+```
+
+```{r}
+cumprob <- cumsum(prob)
+barplot(cumprob, names.arg = outcomes, space = 0.1, xlab = "outcome", ylab = "Cumulative Pr(X)", 
+    main = "Cumulative Probability")
+```
+
+Regression on percentage or proportion follows beta distribution 
+```{r}
+library(ggplot2)
+a <- 2
+b <- 1
+K <- 2
+x <- seq(from = 0, to = 1, by = 0.025)
+fx <- K * x^(a - 1) * (1 - x)^(b - 1)
+lower_x <- seq(from = -0.25, to = 0, by = 0.025)  # add some values of x less than zero
+upper_x <- seq(from = 1, to = 1.25, by = 0.025)  # add some values of x greater than one
+lower_fx <- rep(0, 11)  # add fx=0 values to x<0
+upper_fx <- rep(0, 11)  # add fx=0 values to x>1
+x <- c(lower_x, x, upper_x)  # paste xs together
+fx <- c(lower_fx, fx, upper_fx)  # paste fxs together
+d <- as.data.frame(cbind(x, fx))
+p <- ggplot(data = d, aes(x = x, y = fx)) + xlab("x") + ylab("f(x)") + geom_line()
+p
+```
+```{r}
+library(manipulate)
+manipulate(ggplot(data = d, aes(x = x, y = fx)) + xlab("x") + ylab("f(x)") + 
+    geom_line() + geom_polygon(data = data.frame(xvals = c(0, n, n, 0), fxvals = c(0, 
+    K * n^(a - 1) * (1 - n)^(b - 1), 0, 0)), aes(x = xvals, y = fxvals)) + ggtitle(paste("Area Under Function = ", 
+    0.5 * n * K * n^(a - 1) * (1 - n)^(b - 1), sep = " ")), n = slider(0, 1, 
+    initial = 0.5, step = 0.01))
+```
+```{r}
+x <- seq(from = 0, to = 1, by = 0.005)
+prob <- 0.5 * x * K * x^(a - 1) * (1 - x)^(b - 1)
+barplot(prob, names.arg = x, space = 0, main = "Cumulative Probability", xlab = "x", 
+    ylab = "Pr(X ≤ x)")
+```
+
+What is the chance of getting a “1” on each of six consecutive rolls of a die? What about of getting exactly three “1”s? What is the expected number of “1”s to occur in six consecutive rolls?
+
+
+```{r}
+n <- 6  # number of trials
+k <- 6  # number of successes
+p <- 1/6
+prob <- (factorial(n)/(factorial(k) * factorial(n - k))) * (p^k) * (1 - p)^(n - 
+    k)
+prob
+```
+```{r}
+k <- 3  # number of successes
+prob <- (factorial(n)/(factorial(k) * factorial(n - k))) * (p^k) * (1 - p)^(n - 
+    k)
+prob
+```
+
+As for other distributions, R has a built in density function, the dbinom() function, that you can use to solve for the probability of a given outcome, i.e., Pr (X=x)
+```{r}
+dbinom(x = k, size = n, prob = p)
+```
+
+We can also use the built in function pbinom() to return the value of the cumulative distribution function for the binomial distribution, i.e., the probability of observing up to and including a given number of successes in n
+trials.
+
+So, for example, the chances of observing exactly 0, 1, 2, 3, … 6 rolls of “1” on 6 rolls of a die are…
+```{r}
+probset <- dbinom(x = 0:6, size = 6, prob = 1/6)  # x is number of successes, size is number of trials
+barplot(probset, names.arg = 0:6, space = 0, xlab = "outcome", ylab = "Pr(X = outcome)", 
+    main = "Probability Mass Function")
+
+```
+
+```{r}
+cumprob = cumsum(probset)
+barplot(cumprob, names.arg = 0:6, space = 0.1, xlab = "outcome", ylab = "Cumulative Pr(X)", 
+    main = "Cumulative Probability")
+```
+
+sum(probset)  # equals 1, as it should
+## [1] 1
+The chance of observing exactly 3 rolls of “1” is…
+
+dbinom(x = 3, size = 6, prob = 1/6)
+## [1] 0.05358368
+And the chance of observing up to and including 3 rolls of “1” is…
+
+pbinom(q = 3, size = 6, prob = 1/6)  # note the name of the argument is q not x
+## [1] 0.991298
+… which can also be calculated by summing the relevant individual outcome probabilities…
+
+sum(dbinom(x = 0:3, size = 6, prob = 1/6))  # this sums the probabilities of 0, 1, 2, and 3 successes
+## [1] 0.991298
+The probability of observing more than 3 rolls of “1” is given as…
+
+1 - pnbinom(q = 3, size = 6, prob = 1/6)
+## [1] 0.9988642
+or, alterntatively…
+
+pnbinom(q = 3, size = 6, prob = 1/6, lower.tail = FALSE)
+## [1] 0.9988642
+The probability of observing 3 or more rolls of “1” is…
+
+1 - pbinom(q = 2, size = 6, prob = 1/6)  # note here that the q argument is '2'
+## [1] 0.06228567
+or, alternatively…
+
+pbinom(q = 2, size = 6, prob = 1/6, lower.tail = FALSE)
+## [1] 0.06228567
+
+```{r}
+a <- 4
+b <- 8
+x <- seq(from = a - (b - a), to = b + (b - a), by = 0.01)
+fx <- dunif(x, min = a, max = b)  # dunif() evaluates the density at each x
+plot(x, fx, type = "l", xlab = "x", ylab = "f(x)", main = "Probability Density Function")
+```
+
+CHALLENGE:
+
+Simulate a sample of 10000 random numbers from a uniform distribution in the interval between a = 6 and b = 8. Calculate the mean and variance of this simulated sample and compare it to the expectation for these parameters.
+```{r}
+#no idea what im doing here
+
+sim<-runif(10000, 6, 8)
+a<-6
+b<-8
+uni<-dunif(sim, min=6, max=8)
+mean(uni)
+sd (uni)
+```
+```{r}
+mu <- 4
+sigma <- 1.5
+curve(dnorm(x, mu, sigma), mu - 4 * sigma, mu + 4 * sigma, main = "Normal Curve", 
+    xlab = "x", ylab = "f(x)")
+```
+> mean(sim)
+[1] 7.002211
+> sd(sim)
+[1] 0.5743454
+> hist(sim)
+
+
+
+
+```{r}
+manipulate(plot(seq(from = (mu - 4 * sigma), to = (mu + 4 * sigma), length.out = 1000), 
+    dnorm(seq(from = (mu - 4 * sigma), to = (mu + 4 * sigma), length.out = 1000), 
+        mean = mu, sd = sigma), type = "l", xlim = c(mu - 4 * sigma, mu + 4 * 
+        sigma), xlab = "x", ylab = "f(x)", main = "Normal Probability Density Function") + 
+    polygon(rbind(c(mu - nsigma * sigma, 0), cbind(seq(from = (mu - nsigma * 
+        sigma), to = (mu + nsigma * sigma), length.out = 1000), dnorm(seq(from = (mu - 
+        nsigma * sigma), to = (mu + nsigma * sigma), length.out = 1000), mean = mu, 
+        sd = sigma)), c(mu + nsigma * sigma, 0)), border = NA, col = "salmon") + 
+    abline(v = mu, col = "blue") + abline(h = 0) + abline(v = c(mu - nsigma * 
+    sigma, mu + nsigma * sigma), col = "salmon"), mu = slider(-10, 10, initial = 0, 
+    step = 0.25), sigma = slider(0.25, 4, initial = 1, step = 0.25), nsigma = slider(0, 
+    4, initial = 0, step = 0.25))
+```
+```{r}
+manipulate(plot(seq(from = (mu - 6 * sigma), to = (mu + 6 * sigma), length.out = 1000), 
+    pnorm(seq(from = (mu - 6 * sigma), to = (mu + 6 * sigma), length.out = 1000), 
+        mean = mu, sd = sigma), type = "l", xlim = c(-20, 20), xlab = "x", ylab = "f(x)", 
+    main = "Cumulative Probability"), mu = slider(-10, 10, initial = 0, step = 0.25), 
+    sigma = slider(0.25, 10, initial = 1, step = 0.25))  # plots the cumulative distribution function
+```
+
